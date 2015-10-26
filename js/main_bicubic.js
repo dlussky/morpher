@@ -6,32 +6,33 @@
 
         o: {
             canvas: null,
-            canvasWidth: 0,
-            canvasHeight: 0,
+            canvasWidth: 375,
+            canvasHeight: 375,
             context: null,
             img: 'img/2.png',
-            step: 15,
-            flowSpeed: 3,
-            flowChange: 0.2,
+            step: 10,
+            flowSpeed: 2,
+            flowChange: 0.3,
+            blending: 0.1,
             aw: 0,
             ah: 0,
             flowMap: {
                 x: null,
-                y: null,
+                y: null
             },
             flowAnchors: {
                 x: null,
                 y: null,
                 r: null,
                 phi: null,
-                dPhi: null,
+                dPhi: null
             },
-            framesTotal: 100,
+            framesTotal: 200,
             frames: null,
             currentFrame: 0,
             singlePass: false,
             buffering: true,
-            timerId: null,
+            timerId: null
         },
 
         init: function() {
@@ -52,7 +53,7 @@
 
             var imageObj = new Image();
             imageObj.src = this.o.img;
-            
+
             var context = this.o.context;
 
             imageObj.onload = function() {
@@ -74,7 +75,7 @@
             for (var i = 1; i < this.o.framesTotal; i++) {
 
                 console.log('Generating frame #'+i+' of '+this.o.framesTotal);
-                
+
                 var data = this.o.frames[i-1];
                 this.o.frames[i] = new Array(data.length);
 
@@ -93,8 +94,12 @@
                         } else {
 
                             var r = this.bicubicOptimized(data, x + this.o.flowMap.x[y * this.o.canvasWidth + x], y + this.o.flowMap.y[y * this.o.canvasWidth + x], 0, this.o.canvasWidth);
-                            var g = this.bicubicOptimized(data, x + this.o.flowMap.x[y * this.o.canvasWidth + x], y + this.o.flowMap.y[y * this.o.canvasWidth + x], 1, this.o.canvasWidth);
-                            var b = this.bicubicOptimized(data, x + this.o.flowMap.x[y * this.o.canvasWidth + x], y + this.o.flowMap.y[y * this.o.canvasWidth + x], 2, this.o.canvasWidth);
+                            var g = this.bicubicOptimized(data, x + this.o.flowMap.x[y * this.o.canvasWidth + x]*0.9, y + this.o.flowMap.y[y * this.o.canvasWidth + x]*0.9, 1, this.o.canvasWidth);
+                            var b = this.bicubicOptimized(data, x + this.o.flowMap.x[y * this.o.canvasWidth + x]*1.1, y + this.o.flowMap.y[y * this.o.canvasWidth + x]*1.1, 2, this.o.canvasWidth);
+
+                            r += this.o.blending*(this.o.frames[0][(y * this.o.canvasWidth + x)*4 + 0] - r);
+                            g += this.o.blending*(this.o.frames[0][(y * this.o.canvasWidth + x)*4 + 1] - g);
+                            b += this.o.blending*(this.o.frames[0][(y * this.o.canvasWidth + x)*4 + 2] - b);
 
                             r = Math.ceil((r < 0) ? 0 : ((r > 255) ? 255 : r));
                             g = Math.ceil((g < 0) ? 0 : ((g > 255) ? 255 : g));
@@ -115,7 +120,7 @@
             }
 
             $('#frame_counter').html('Buffering completed');
-        
+
         },
 
         play: function() {
@@ -156,7 +161,7 @@
                         b = Math.ceil((b < 0) ? 0 : ((b > 255) ? 255 : b));
 
                     }
-                    
+
                     buf32[y * this.o.canvasWidth + x] = 0xff000000 | (b << 16) | (g << 8) | r;
 
                 }
@@ -176,7 +181,7 @@
             var fy = y ^ 0;
             var percentX = x - fx;
             var percentY = y - fy;
-        
+
             var fx14 = fx;
             var fx04 = fx14 - 1;
             var fx24 = fx14 + 1;
@@ -186,31 +191,31 @@
             var yw04o = yw14o - w4;
             var yw24o = yw14o + w4;
             var yw34o = yw14o + w4 + w4;
-            
+
             a = pixels[yw04o + fx04];
             b = pixels[yw04o + fx14];
             c = pixels[yw04o + fx24];
             d = pixels[yw04o + fx34];
             v0 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
-            
+
             a = pixels[yw14o + fx04];
             b = pixels[yw14o + fx14];
             c = pixels[yw14o + fx24];
             d = pixels[yw14o + fx34];
             v1 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
-            
+
             a = pixels[yw24o + fx04];
             b = pixels[yw24o + fx14];
             c = pixels[yw24o + fx24];
             d = pixels[yw24o + fx34];
             v2 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
-            
+
             a = pixels[yw34o + fx04];
             b = pixels[yw34o + fx14];
             c = pixels[yw34o + fx24];
             d = pixels[yw34o + fx34];
             v3 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
-            
+
             a = v0;
             b = v1;
             c = v2;
@@ -225,7 +230,7 @@
             var fy = y ^ 0;
             var percentX = x - fx;
             var percentY = y - fy;
-        
+
             var fx14 = fx * 4;
             var fx04 = fx14 - 4;
             var fx24 = fx14 + 4;
@@ -235,35 +240,35 @@
             var yw04o = yw14o - w4;
             var yw24o = yw14o + w4;
             var yw34o = yw14o + w4 + w4;
-            
+
             a = pixels[yw04o + fx04];
             b = pixels[yw04o + fx14];
             c = pixels[yw04o + fx24];
             d = pixels[yw04o + fx34];
             v0 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
             v0 = v0 > 255 ? 255 : v0 < 0 ? 0 : v0;
-            
+
             a = pixels[yw14o + fx04];
             b = pixels[yw14o + fx14];
             c = pixels[yw14o + fx24];
             d = pixels[yw14o + fx34];
             v1 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
             v1 = v1 > 255 ? 255 : v1 < 0 ? 0 : v1;
-            
+
             a = pixels[yw24o + fx04];
             b = pixels[yw24o + fx14];
             c = pixels[yw24o + fx24];
             d = pixels[yw24o + fx34];
             v2 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
             v2 = v2 > 255 ? 255 : v2 < 0 ? 0 : v2;
-            
+
             a = pixels[yw34o + fx04];
             b = pixels[yw34o + fx14];
             c = pixels[yw34o + fx24];
             d = pixels[yw34o + fx34];
             v3 = 0.5 * (c - a + (2.0 * a - 5.0 * b + 4.0 * c - d + (3.0 * (b - c) + d - a) * percentX) * percentX) * percentX + b;
             v3 = v3 > 255 ? 255 : v3 < 0 ? 0 : v3;
-            
+
             a = v0;
             b = v1;
             c = v2;
@@ -287,7 +292,7 @@
                         this.o.flowAnchors.y[y*this.o.aw + x] = 0;
                         this.o.flowAnchors.r[y*this.o.aw + x] = 0;
                         this.o.flowAnchors.phi[y*this.o.aw + x] = 0;
-                        this.o.flowAnchors.dPhi[y*this.o.aw + x] = 0;                        
+                        this.o.flowAnchors.dPhi[y*this.o.aw + x] = 0;
                     } else {
                         this.o.flowAnchors.r[y*this.o.aw + x] = this.o.flowSpeed * Math.random();
                         this.o.flowAnchors.phi[y*this.o.aw + x] = Math.random() * 2 * Math.PI;
@@ -316,10 +321,10 @@
                     if ((x*y == 0) ||
                         (x > this.o.aw * this.o.step) ||
                         (y > this.o.ah * this.o.step)) {
-                        
+
                         this.o.flowMap.x[y*this.o.canvasWidth + x] = 0;
                         this.o.flowMap.y[y*this.o.canvasWidth + x] = 0;
-                    
+
                     } else {
 
                         this.o.flowMap.x[y*this.o.canvasWidth + x] = this.bicubicOptimizedMono(this.o.flowAnchors.x, x / this.o.step, y / this.o.step, this.o.aw);
@@ -333,12 +338,12 @@
         start: function() {
             var c = this;
             if (this.o.singlePass == true) {
-                this.o.timerId = window.setTimeout(function() { c.draw() }, 10);
+                this.o.timerId = window.setTimeout(function() { c.draw() }, 50);
             } else {
                 if (this.o.buffering) {
-                    this.o.timerId = window.setInterval(function() { c.play() }, 10);    
+                    this.o.timerId = window.setInterval(function() { c.play() }, 50);
                 } else {
-                    this.o.timerId = window.setInterval(function() { c.draw() }, 10);
+                    this.o.timerId = window.setInterval(function() { c.draw() }, 50);
                 }
             }
         },
@@ -354,7 +359,7 @@
     };
 
     $(document).ready(function() {
-        
+
         Morpher.init();
 
         $('#buffering_btn').click(function() {
